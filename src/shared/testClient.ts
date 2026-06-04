@@ -22,7 +22,7 @@ async function runTest() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username: 'admin_user', role: 'admin' }),
   });
-  const { token: adminToken } = await adminLogin.json();
+  const { token: adminToken } = await adminLogin.json() as any;
   logger.info('Admin logged in successfully');
 
   const customerLogin = await fetch(`${API_BASE}/auth/login`, {
@@ -30,7 +30,7 @@ async function runTest() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username: 'customer_a', role: 'customer' }),
   });
-  const { token: customerToken } = await customerLogin.json();
+  const { token: customerToken } = await customerLogin.json() as any;
   logger.info('Customer A logged in successfully');
 
   // 2. Create Order (Verify Transactional Outbox)
@@ -47,7 +47,7 @@ async function runTest() {
       status: 'pending',
     }),
   });
-  const createdOrder = await createRes.json();
+  const createdOrder = await createRes.json() as any;
   logger.info({ order: createdOrder }, 'Order created successfully');
 
   // 3. Read Order (Verify Cache Aside)
@@ -55,13 +55,13 @@ async function runTest() {
   const readRes1 = await fetch(`${API_BASE}/orders/${createdOrder.id}`, {
     headers: { 'Authorization': `Bearer ${customerToken}` },
   });
-  const readOrder1 = await readRes1.json();
+  const readOrder1 = await readRes1.json() as any;
   logger.info({ order: readOrder1 }, 'Cache-aside read 1 (miss -> populate)');
 
   const readRes2 = await fetch(`${API_BASE}/orders/${createdOrder.id}`, {
     headers: { 'Authorization': `Bearer ${customerToken}` },
   });
-  const readOrder2 = await readRes2.json();
+  const readOrder2 = await readRes2.json() as any;
   logger.info({ order: readOrder2 }, 'Cache-aside read 2 (hit from cache)');
 
   // 4. WebSocket connection & Live Stream
@@ -98,7 +98,7 @@ async function runTest() {
     },
     body: JSON.stringify({ status: 'processing' }),
   });
-  const updatedOrder = await updateRes.json();
+  const updatedOrder = await updateRes.json() as any;
   logger.info({ order: updatedOrder }, 'Order updated via API');
 
   await sleep(2000); // Wait for CDC worker to poll and publish
@@ -113,7 +113,7 @@ async function runTest() {
   const snapshotRes = await fetch(`${API_BASE}/orders/snapshot`, {
     headers: { 'Authorization': `Bearer ${customerToken}` },
   });
-  const snapshot = await snapshotRes.json();
+  const snapshot = await snapshotRes.json() as any;
   logger.info({ lastSequence: snapshot.lastSequence }, 'Fetched order snapshot');
 
   // Create another order while disconnected
@@ -153,7 +153,7 @@ async function runTest() {
   const replayRes = await fetch(`${API_BASE}/events/replay?from=${snapshot.lastSequence}`, {
     headers: { 'Authorization': `Bearer ${customerToken}` },
   });
-  const missedEvents = await replayRes.json();
+  const missedEvents = await replayRes.json() as any;
   logger.info({ count: missedEvents.length, events: missedEvents }, 'Replayed missed events successfully');
 
   // 7. Verify Backpressure & Flow Control
@@ -200,7 +200,7 @@ async function runTest() {
   // Print metrics
   logger.info('\nStep 9: Querying server metrics...');
   const metricsRes = await fetch(`${API_BASE}/metrics`);
-  const metrics = await metricsRes.json();
+  const metrics = await metricsRes.json() as any;
   logger.info({ metrics }, 'Server metrics state');
 
   logger.info('==================================================');

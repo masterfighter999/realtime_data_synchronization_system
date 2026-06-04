@@ -46,3 +46,9 @@ Thumbs.db
 
 # Prisma Client output (if customized, standard generated clients reside inside node_modules)
 /prisma/generated-client
+
+# Aiven Certificates (SSL credentials)
+certs/
+*.pem
+*.cert
+*.key

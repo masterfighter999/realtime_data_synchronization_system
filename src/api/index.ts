@@ -1,4 +1,5 @@
 import express from 'express';
+import path from 'path';
 import { prisma } from '../infrastructure/db';
 import { runWithDbBreaker, dbBreaker, redisBreaker } from '../infrastructure/circuitBreaker';
 import { getCachedOrder, setCachedOrder } from '../cache/orderCache';
@@ -13,6 +14,10 @@ import { logger } from '../shared/logger';
 
 const app = express();
 app.use(express.json());
+
+// Serve frontend dashboard statically
+app.use(express.static(path.join(__dirname, '../../public')));
+
 
 // Apply global IP-based rate limit
 app.use(rateLimitMiddleware(ipLimiter, true));

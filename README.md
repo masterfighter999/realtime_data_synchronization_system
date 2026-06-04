@@ -159,6 +159,22 @@ sequenceDiagram
 
 ---
 
+## Real-Time Visual Dashboard
+
+To showcase the system in action and facilitate live demonstrations (such as screenshots and video recordings), a premium **Real-Time Visual Dashboard** is built-in and served directly from the Express API server at:
+
+👉 **[http://localhost:3000/](http://localhost:3000/)**
+
+### Key Dashboard Features:
+1. **Interactive Session Authentication**: Login instantly as `admin_user` (Admin role) or `customer_a` (Customer role) using issued JWTs.
+2. **Order Management Controls**: Write directly to the database via REST API forms. Updates are synchronized live across all open sessions.
+3. **Neon Row Flash Effects**: Table rows animate dynamically (Green glow = created, Blue = updated, Red = deleted) as WebSocket event frames arrive.
+4. **Live CDC Log Terminal**: View raw outbox event JSONs (with sequence offsets, event types, payloads, and versions) as they are consumed from Aiven Kafka.
+5. **Connection Outage Simulation**: A manual toggle allows you to "disconnect" the client WebSocket. You can execute DB modifications while offline, click "Reconnect & Sync State", and watch the dashboard automatically execute a sequence replay starting from the offset highwater mark, reconciling the UI state perfectly.
+6. **Telemetry & Health Metrics**: Visual indicators track CDC outbox lag (seconds), active client socket counts, event throughput (EPS), and PostgreSQL / Redis circuit breaker states.
+
+---
+
 ## Quick Start & Setup
 
 ### Requirements

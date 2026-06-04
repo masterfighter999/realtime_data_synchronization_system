@@ -1,4 +1,4 @@
-import { Kafka, SASLOptions, ConnectionTimeoutError } from 'kafkajs';
+import { Kafka, SASLOptions } from 'kafkajs';
 import fs from 'fs';
 import { config } from '../shared/config';
 import { logger } from '../shared/logger';

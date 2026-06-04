@@ -128,17 +128,25 @@ async function startKafkaSubscription() {
           const customerName = upgradedEvent.payload?.customerName || upgradedEvent.payload?.customer_name;
 
           // Route to Admins
-          const adminSockets = io.to('room:admin').sockets;
-          for (const [_, socket] of adminSockets) {
-            sendEventToSocketWithBackpressure(socket, upgradedEvent);
+          const adminSocketIds = io.sockets.adapter.rooms.get('room:admin');
+          if (adminSocketIds) {
+            for (const socketId of adminSocketIds) {
+              const socket = io.sockets.sockets.get(socketId);
+              if (socket) {
+                sendEventToSocketWithBackpressure(socket, upgradedEvent);
+              }
+            }
           }
 
           // Route to specific customer
           if (customerName) {
-            const customerSockets = io.to(`room:customer:${customerName}`).sockets;
-            for (const [_, socket] of customerSockets) {
-              if (socket.data.user?.role !== 'admin') {
-                sendEventToSocketWithBackpressure(socket, upgradedEvent);
+            const customerSocketIds = io.sockets.adapter.rooms.get(`room:customer:${customerName}`);
+            if (customerSocketIds) {
+              for (const socketId of customerSocketIds) {
+                const socket = io.sockets.sockets.get(socketId);
+                if (socket && socket.data.user?.role !== 'admin') {
+                  sendEventToSocketWithBackpressure(socket, upgradedEvent);
+                }
               }
             }
           }

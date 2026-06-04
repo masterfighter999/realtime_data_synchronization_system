@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AeroSync // Real-Time Database Change Sync Dashboard</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+  <!-- Background Ambient Glows -->
+  <div class="glow-bg">
+    <div class="glow-sphere glow-1"></div>
+    <div class="glow-sphere glow-2"></div>
+  </div>
+
+  <!-- AUTHENTICATION SCREEN -->
+  <div id="auth-screen" class="auth-container">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="logo-icon">
+          <i class="fa-solid fa-cloud-arrow-down pulse-icon"></i>
+        </div>
+        <h1>AeroSync</h1>
+        <p>Real-Time Database Change Notification System</p>
+      </div>
+
+      <div class="quick-login-section">
+        <h3>Quick Access Roles</h3>
+        <div class="quick-login-buttons">
+          <button id="btn-login-admin" class="btn btn-secondary">
+            <i class="fa-solid fa-user-shield"></i> Login as Admin
+          </button>
+          <button id="btn-login-customer" class="btn btn-secondary">
+            <i class="fa-solid fa-user"></i> Login as Customer A
+          </button>
+        </div>
+      </div>
+
+      <div class="divider">
+        <span>OR ENTER CREDENTIALS</span>
+      </div>
+
+      <form id="login-form" class="auth-form">
+        <div class="form-group">
+          <label for="login-username">Username</label>
+          <div class="input-with-icon">
+            <i class="fa-solid fa-signature"></i>
+            <input type="text" id="login-username" placeholder="e.g. john_doe" required autocomplete="username">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="login-role">System Role</label>
+          <div class="input-with-icon">
+            <i class="fa-solid fa-id-card"></i>
+            <select id="login-role" required>
+              <option value="customer">Customer</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">
+          Authenticate Session <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </form>
+
+      <div id="auth-error" class="alert alert-danger hidden">
+        <i class="fa-solid fa-triangle-exclamation"></i> <span id="auth-error-msg">Authentication failed</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APPLICATION SCREEN -->
+  <div id="app-screen" class="app-container hidden">
+    <!-- Header Navigation -->
+    <header class="app-header">
+      <div class="header-logo">
+        <div class="logo-badge">
+          <i class="fa-solid fa-bolt"></i>
+        </div>
+        <div class="logo-text">
+          <h2>AeroSync</h2>
+          <span>CDC Outbox Stream Gateway</span>
+        </div>
+      </div>
+
+      <div class="header-status">
+        <div id="ws-status-badge" class="status-badge status-disconnected">
+          <span class="pulse-dot"></span>
+          <span id="ws-status-text">Disconnected</span>
+        </div>
+        <div class="user-profile">
+          <div class="profile-avatar">
+            <i class="fa-solid fa-circle-user"></i>
+          </div>
+          <div class="profile-details">
+            <h4 id="user-display-name">Username</h4>
+            <span id="user-display-role" class="badge">Role</span>
+          </div>
+        </div>
+        <button id="btn-logout" class="btn btn-danger-icon" title="Logout">
+          <i class="fa-solid fa-power-off"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- App Grid Layout -->
+    <main class="app-content">
+
+      <!-- Metrics Row -->
+      <section class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-icon metric-purple">
+            <i class="fa-solid fa-gauge-high"></i>
+          </div>
+          <div class="metric-info">
+            <span class="metric-label">CDC Outbox Lag</span>
+            <h3 id="metric-lag">0.00s</h3>
+            <p id="metric-lag-sub">Unprocessed DB events</p>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-icon metric-green">
+            <i class="fa-solid fa-users"></i>
+          </div>
+          <div class="metric-info">
+            <span class="metric-label">Active Clients</span>
+            <h3 id="metric-clients">0</h3>
+            <p>Live WebSocket nodes</p>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-icon metric-blue">
+            <i class="fa-solid fa-wave-square"></i>
+          </div>
+          <div class="metric-info">
+            <span class="metric-label">Event Throughput</span>
+            <h3 id="metric-eps">0.0 eps</h3>
+            <p>Valkey metrics stream</p>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-icon metric-amber">
+            <i class="fa-solid fa-heart-pulse"></i>
+          </div>
+          <div class="metric-info">
+            <span class="metric-label">Circuit Breakers</span>
+            <div class="breaker-states">
+              <span class="breaker-label">DB: <span id="breaker-db" class="status-badge-inline closed">CLOSED</span></span>
+              <span class="breaker-label">Cache: <span id="breaker-cache" class="status-badge-inline closed">CLOSED</span></span>
+            </div>
+            <p>Opossum failure isolation</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Main Columns -->
+      <div class="content-grid">
+        
+        <!-- Left Column: Controls & Order Creator -->
+        <div class="left-column">
+          <!-- Connection Control Center -->
+          <div class="card card-glow-purple">
+            <div class="card-header">
+              <h3><i class="fa-solid fa-network-wired"></i> Network Operations</h3>
+            </div>
+            <div class="card-body">
+              <div class="connection-toggles">
+                <div class="toggle-row">
+                  <span class="toggle-label">Socket Connection</span>
+                  <label class="switch">
+                    <input type="checkbox" id="socket-connection-toggle" checked>
+                    <span class="slider round"></span>
+                  </label>
+                </div>
+                <div class="toggle-info">
+                  <p class="text-muted">Turn off to simulate network isolation. Changes made offline can be re-synchronized afterward.</p>
+                </div>
+                <div class="sync-actions">
+                  <button id="btn-sync-replay" class="btn btn-primary btn-block">
+                    <i class="fa-solid fa-rotate"></i> Reconnect & Sync State
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Order Creation Card -->
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fa-solid fa-cart-plus"></i> Create Order</h3>
+            </div>
+            <div class="card-body">
+              <form id="order-creation-form">
+                <div class="form-group">
+                  <label for="order-customer">Customer Name</label>
+                  <div class="input-with-icon">
+                    <i class="fa-solid fa-user-tag"></i>
+                    <input type="text" id="order-customer" required>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="order-product">Product Item</label>
+                  <div class="input-with-icon">
+                    <i class="fa-solid fa-box-open"></i>
+                    <input type="text" id="order-product" placeholder="e.g. Mechanical Keyboard" required>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="order-status">Initial Status</label>
+                  <div class="input-with-icon">
+                    <i class="fa-solid fa-circle-question"></i>
+                    <select id="order-status" required>
+                      <option value="pending" selected>Pending</option>
+                      <option value="shipped">Shipped</option>
+                      <option value="delivered">Delivered</option>
+                    </select>
+                  </div>
+                </div>
+
+                <button type="submit" class="btn btn-success btn-block">
+                  Commit Database Order <i class="fa-solid fa-circle-check"></i>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Middle Column: Order List -->
+        <div class="middle-column">
+          <div class="card orders-card">
+            <div class="card-header flex-header">
+              <h3><i class="fa-solid fa-list-check"></i> Active Orders Database</h3>
+              <div class="header-actions">
+                <button id="btn-refresh-orders" class="btn btn-secondary-icon" title="Fetch Current Snapshot">
+                  <i class="fa-solid fa-arrows-rotate"></i> Snapshot
+                </button>
+              </div>
+            </div>
+            <div class="card-body no-padding table-responsive">
+              <table class="orders-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Product</th>
+                    <th>Customer</th>
+                    <th>Status</th>
+                    <th>Updated At</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="orders-table-body">
+                  <!-- Dynamic rows loaded here -->
+                  <tr class="placeholder-row">
+                    <td colspan="6">
+                      <div class="empty-state">
+                        <i class="fa-solid fa-spinner fa-spin"></i>
+                        <p>Awaiting database connection...</p>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: CDC Event Console -->
+        <div class="right-column">
+          <div class="card console-card">
+            <div class="card-header flex-header">
+              <h3><i class="fa-solid fa-terminal"></i> Live CDC Event Feed</h3>
+              <div class="header-actions">
+                <button id="btn-clear-console" class="btn btn-secondary-icon" title="Clear Console">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </div>
+            </div>
+            <div class="card-body console-body">
+              <!-- Backpressure warning banner -->
+              <div id="backpressure-alert" class="alert alert-warning alert-inline hidden">
+                <i class="fa-solid fa-circle-exclamation fa-fade"></i>
+                <div>
+                  <strong>BACKPRESSURE TRIGGERED:</strong> Client socket queue filled! Some live events were dropped. Reconnect & Sync recommended.
+                </div>
+              </div>
+
+              <div id="cdc-console-feed" class="console-feed">
+                <!-- Log statements populate here -->
+                <div class="console-line system-line">[SYSTEM] Gateway ready. Waiting for outbox events...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Socket.IO library from local gateway -->
+  <script src="http://localhost:3001/socket.io/socket.io.js"></script>
+  <!-- Main Script -->
+  <script src="index.js" defer></script>
+</body>
+</html>

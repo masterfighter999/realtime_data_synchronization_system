@@ -41,7 +41,7 @@ const dbBreaker = createBreaker(
 );
 
 export async function runWithDbBreaker<T>(operation: () => Promise<T>): Promise<T> {
-  return dbBreaker.fire(operation);
+  return dbBreaker.fire(operation) as Promise<T>;
 }
 
 // 2. Redis Circuit Breaker
@@ -53,7 +53,7 @@ const redisBreaker = createBreaker(
 );
 
 export async function runWithRedisBreaker<T>(operation: () => Promise<T>): Promise<T> {
-  return redisBreaker.fire(operation);
+  return redisBreaker.fire(operation) as Promise<T>;
 }
 
 // Export breakers for metrics retrieval
