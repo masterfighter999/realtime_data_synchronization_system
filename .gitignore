@@ -52,3 +52,6 @@ certs/
 *.pem
 *.cert
 *.key
+
+# Back4App temporary configuration file
+back4app_env.txt
