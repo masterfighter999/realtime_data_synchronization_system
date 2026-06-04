@@ -15,19 +15,29 @@ function getSSLConfig() {
   }
 
   const resolvePem = (value: string): string => {
-    // If it is an inline PEM string, replace literal \n with newlines
-    if (value.startsWith('-----BEGIN')) {
-      return value.replace(/\\n/g, '\n');
+    let cleaned = value.trim();
+    // Strip surrounding double or single quotes if present
+    if (cleaned.startsWith('"') && cleaned.endsWith('"')) {
+      cleaned = cleaned.substring(1, cleaned.length - 1);
+    } else if (cleaned.startsWith("'") && cleaned.endsWith("'")) {
+      cleaned = cleaned.substring(1, cleaned.length - 1);
     }
-    // Otherwise, assume it is a file path
+    cleaned = cleaned.trim();
+
+    // If it contains the PEM header, treat it as inline certificate content
+    if (cleaned.includes('-----BEGIN')) {
+      return cleaned.replace(/\\n/g, '\n');
+    }
+
+    // Otherwise, assume it is a local file path
     try {
-      if (fs.existsSync(value)) {
-        return fs.readFileSync(value, 'utf-8');
+      if (fs.existsSync(cleaned)) {
+        return fs.readFileSync(cleaned, 'utf-8');
       }
     } catch (error: any) {
-      logger.warn({ path: value, err: error.message }, 'Could not read certificate path, passing as-is');
+      logger.warn({ path: cleaned, err: error.message }, 'Could not read certificate path, passing as-is');
     }
-    return value;
+    return cleaned;
   };
 
   try {
