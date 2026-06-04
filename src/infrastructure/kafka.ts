@@ -45,6 +45,15 @@ function getSSLConfig() {
     const cert = kafkaAccessCert ? resolvePem(kafkaAccessCert) : undefined;
     const key = kafkaAccessKey ? resolvePem(kafkaAccessKey) : undefined;
 
+    logger.info({
+      caLength: ca ? ca.length : 0,
+      certLength: cert ? cert.length : 0,
+      keyLength: key ? key.length : 0,
+      caPreview: ca ? ca.substring(0, 30) + '...' + ca.substring(ca.length - 30) : '',
+      certPreview: cert ? cert.substring(0, 30) + '...' + cert.substring(cert.length - 30) : '',
+      keyPreview: key ? key.substring(0, 30) + '...' + key.substring(key.length - 30) : '',
+    }, 'Resolved Kafka certificates');
+
     return {
       rejectUnauthorized: false, // Fail-open to support custom domain mappings and development testing
       ca: [ca],
