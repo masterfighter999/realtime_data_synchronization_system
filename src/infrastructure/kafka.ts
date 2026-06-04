@@ -24,20 +24,24 @@ function getSSLConfig() {
     }
     cleaned = cleaned.trim();
 
+    let pemContent = cleaned;
+
     // If it contains the PEM header, treat it as inline certificate content
     if (cleaned.includes('-----BEGIN')) {
-      return cleaned.replace(/\\n/g, '\n');
+      pemContent = cleaned.replace(/\\n/g, '\n');
+    } else {
+      // Otherwise, assume it is a local file path
+      try {
+        if (fs.existsSync(cleaned)) {
+          pemContent = fs.readFileSync(cleaned, 'utf-8');
+        }
+      } catch (error: any) {
+        logger.warn({ path: cleaned, err: error.message }, 'Could not read certificate path, passing as-is');
+      }
     }
 
-    // Otherwise, assume it is a local file path
-    try {
-      if (fs.existsSync(cleaned)) {
-        return fs.readFileSync(cleaned, 'utf-8');
-      }
-    } catch (error: any) {
-      logger.warn({ path: cleaned, err: error.message }, 'Could not read certificate path, passing as-is');
-    }
-    return cleaned;
+    // Strip any Windows carriage return (\r) characters to prevent OpenSSL parsing errors on Linux
+    return pemContent.replace(/\r/g, '');
   };
 
   try {
