@@ -7,60 +7,68 @@ import { incrementClientCount, decrementClientCount } from '../monitoring/redisM
 import { logger } from '../shared/logger';
 import { config } from '../shared/config';
 
-const httpServer = createServer();
-const io = new Server(httpServer, {
-  cors: {
-    origin: '*',
-  },
-});
+let io: Server;
 
 const MAX_PENDING_ACK_SIZE = 5;
 const socketQueues = new Map<string, { eventId: string; timestamp: number }[]>();
 const socketBackpressureState = new Map<string, boolean>();
 
-// Socket.IO Connection Handshake Middleware for JWT Verification
-io.use((socket, next) => {
-  const token = socket.handshake.auth?.token || socket.handshake.query?.token;
-
-  if (!token) {
-    logger.warn('Socket connection rejected: Missing JWT token');
-    return next(new Error('Authentication error: Token required'));
-  }
-
-  try {
-    const decoded = verifyToken(token as string);
-    socket.data.user = decoded;
-    next();
-  } catch (error: any) {
-    logger.warn({ err: error.message }, 'Socket connection rejected: Invalid JWT token');
-    return next(new Error('Authentication error: Invalid token'));
-  }
-});
-
-io.on('connection', async (socket: Socket) => {
-  const user = socket.data.user as UserPayload;
-  logger.info({ id: socket.id, username: user.username, role: user.role }, 'Socket client connected');
-
-  // Track connection metric in Valkey
-  await incrementClientCount();
-
-  // Initialize socket buffers for backpressure tracking
-  socketQueues.set(socket.id, []);
-  socketBackpressureState.set(socket.id, false);
-
-  // Place socket in rooms for targeted routing
-  if (user.role === 'admin') {
-    socket.join('room:admin');
-  }
-  socket.join(`room:customer:${user.username}`);
-
-  socket.on('disconnect', async () => {
-    logger.info({ id: socket.id, username: user.username }, 'Socket client disconnected');
-    await decrementClientCount();
-    socketQueues.delete(socket.id);
-    socketBackpressureState.delete(socket.id);
+export function initializeWebSocket(httpServer: any): Server {
+  io = new Server(httpServer, {
+    cors: {
+      origin: '*',
+    },
   });
-});
+
+  // Socket.IO Connection Handshake Middleware for JWT Verification
+  io.use((socket, next) => {
+    const token = socket.handshake.auth?.token || socket.handshake.query?.token;
+
+    if (!token) {
+      logger.warn('Socket connection rejected: Missing JWT token');
+      return next(new Error('Authentication error: Token required'));
+    }
+
+    try {
+      const decoded = verifyToken(token as string);
+      socket.data.user = decoded;
+      next();
+    } catch (error: any) {
+      logger.warn({ err: error.message }, 'Socket connection rejected: Invalid JWT token');
+      return next(new Error('Authentication error: Invalid token'));
+    }
+  });
+
+  io.on('connection', async (socket: Socket) => {
+    const user = socket.data.user as UserPayload;
+    logger.info({ id: socket.id, username: user.username, role: user.role }, 'Socket client connected');
+
+    // Track connection metric in Valkey
+    await incrementClientCount();
+
+    // Initialize socket buffers for backpressure tracking
+    socketQueues.set(socket.id, []);
+    socketBackpressureState.set(socket.id, false);
+
+    // Place socket in rooms for targeted routing
+    if (user.role === 'admin') {
+      socket.join('room:admin');
+    }
+    socket.join(`room:customer:${user.username}`);
+
+    socket.on('disconnect', async () => {
+      logger.info({ id: socket.id, username: user.username }, 'Socket client disconnected');
+      await decrementClientCount();
+      socketQueues.delete(socket.id);
+      socketBackpressureState.delete(socket.id);
+    });
+  });
+
+  // Start Kafka consumer subscription
+  startKafkaSubscription();
+
+  return io;
+}
 
 /**
  * Sends an event to a specific socket connection while respecting backpressure thresholds.
@@ -161,11 +169,14 @@ async function startKafkaSubscription() {
   }
 }
 
-// Start consumer and server
-startKafkaSubscription();
-httpServer.listen(config.wsPort, () => {
-  logger.info(`WebSocket Gateway listening on port ${config.wsPort}`);
-});
+// If run directly as a standalone process (e.g. npm run start:ws)
+if (require.main === module) {
+  const httpServer = createServer();
+  initializeWebSocket(httpServer);
+  httpServer.listen(config.wsPort, () => {
+    logger.info(`WebSocket Gateway listening on port ${config.wsPort} (standalone mode)`);
+  });
+}
 
 // Handle graceful shutdown
 const shutdown = async () => {
@@ -173,7 +184,9 @@ const shutdown = async () => {
   try {
     await consumer.disconnect();
   } catch (e) {}
-  process.exit(0);
+  if (require.main === module) {
+    process.exit(0);
+  }
 };
 
 process.on('SIGTERM', shutdown);

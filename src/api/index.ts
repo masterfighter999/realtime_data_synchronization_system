@@ -9,6 +9,8 @@ import { rateLimitMiddleware, ipLimiter, clientLimiter } from '../shared/rateLim
 import { getLagMetrics } from '../monitoring/lagMonitor';
 import { getClientCount, getEventsPerSecond } from '../monitoring/redisMetrics';
 import { serializeBigInt } from '../shared/utils';
+import { createServer } from 'http';
+import { initializeWebSocket } from '../websocket';
 import { config } from '../shared/config';
 import { logger } from '../shared/logger';
 
@@ -264,7 +266,10 @@ app.get('/metrics', async (req, res) => {
   }
 });
 
-// Start API Server
-app.listen(config.port, () => {
-  logger.info(`Express API Server listening on port ${config.port} in ${config.nodeEnv} mode`);
+// Start Combined API and WebSocket Server
+const httpServer = createServer(app);
+initializeWebSocket(httpServer);
+
+httpServer.listen(config.port, () => {
+  logger.info(`Express API & WebSocket Server listening on port ${config.port} in ${config.nodeEnv} mode`);
 });

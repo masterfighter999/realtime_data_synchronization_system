@@ -1,8 +1,8 @@
 // AeroSync Dashboard Client-Side Logic
 
 const API_BASE = window.location.origin;
-// WebSocket gateway runs on port 3001
-const WS_BASE = `${window.location.protocol}//${window.location.hostname}:3001`;
+// WebSocket gateway runs on the same port/server
+const WS_BASE = window.location.origin;
 
 // State variables
 let jwtToken = localStorage.getItem('aerosync_token') || null;
