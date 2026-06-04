@@ -1,0 +1,48 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Order {
+  id            Int      @id @default(autoincrement())
+  customer_name String   @db.VarChar(255)
+  product_name  String   @db.VarChar(255)
+  status        String   @db.VarChar(50)
+  updated_at    DateTime @default(now()) @updatedAt
+
+  @@map("orders")
+}
+
+model OutboxEvent {
+  event_id        String   @id @db.Uuid
+  aggregate_type  String   @db.VarChar(255)
+  aggregate_id    String   @db.VarChar(255)
+  event_type      String   @db.VarChar(255)
+  payload         Json
+  created_at      DateTime @default(now())
+  processed       Boolean  @default(false)
+  sequence_number BigInt   @unique @default(autoincrement())
+  event_version   Int      @default(1)
+
+  @@index([processed, created_at])
+  @@map("outbox_events")
+}
+
+model DeadLetterEvent {
+  event_id        String   @id @db.Uuid
+  aggregate_type  String   @db.VarChar(255)
+  aggregate_id    String   @db.VarChar(255)
+  event_type      String   @db.VarChar(255)
+  payload         Json
+  created_at      DateTime
+  sequence_number BigInt
+  event_version   Int
+  failure_reason  String   @db.Text
+  failed_at       DateTime @default(now())
+
+  @@map("dead_letter_events")
+}

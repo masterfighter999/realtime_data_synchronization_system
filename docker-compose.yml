@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    container_name: rtds-api
+    command: node dist/api/index.js
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "${DATABASE_URL}"
+      REDIS_URL: "${REDIS_URL}"
+      PORT: 3000
+      JWT_SECRET: "${JWT_SECRET}"
+      NODE_ENV: production
+    restart: always
+
+  websocket:
+    build: .
+    container_name: rtds-websocket
+    command: node dist/websocket/index.js
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: "${DATABASE_URL}"
+      REDIS_URL: "${REDIS_URL}"
+      PORT: 3001
+      JWT_SECRET: "${JWT_SECRET}"
+      NODE_ENV: production
+      KAFKA_BROKERS: "${KAFKA_BROKERS}"
+      KAFKA_CLIENT_ID: "${KAFKA_CLIENT_ID}"
+      KAFKA_CA_CERT: "${KAFKA_CA_CERT}"
+      KAFKA_ACCESS_CERT: "${KAFKA_ACCESS_CERT}"
+      KAFKA_ACCESS_KEY: "${KAFKA_ACCESS_KEY}"
+      KAFKA_SASL_USERNAME: "${KAFKA_SASL_USERNAME}"
+      KAFKA_SASL_PASSWORD: "${KAFKA_SASL_PASSWORD}"
+    restart: always
+
+  publisher:
+    build: .
+    container_name: rtds-publisher
+    command: node dist/outbox/index.js
+    environment:
+      DATABASE_URL: "${DATABASE_URL}"
+      REDIS_URL: "${REDIS_URL}"
+      JWT_SECRET: "${JWT_SECRET}"
+      NODE_ENV: production
+      KAFKA_BROKERS: "${KAFKA_BROKERS}"
+      KAFKA_CLIENT_ID: "${KAFKA_CLIENT_ID}"
+      KAFKA_CA_CERT: "${KAFKA_CA_CERT}"
+      KAFKA_ACCESS_CERT: "${KAFKA_ACCESS_CERT}"
+      KAFKA_ACCESS_KEY: "${KAFKA_ACCESS_KEY}"
+      KAFKA_SASL_USERNAME: "${KAFKA_SASL_USERNAME}"
+      KAFKA_SASL_PASSWORD: "${KAFKA_SASL_PASSWORD}"
+    restart: always

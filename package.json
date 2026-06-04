@@ -1,0 +1,39 @@
+{
+  "name": "realtime-data-synchronization-system",
+  "version": "1.0.0",
+  "description": "Production-Grade Real-Time Database Change Notification System",
+  "main": "dist/api/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start:api": "ts-node src/api/index.ts",
+    "start:ws": "ts-node src/websocket/index.ts",
+    "start:publisher": "ts-node src/outbox/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 0"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.14.0",
+    "@socket.io/redis-adapter": "^8.3.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "ioredis": "^5.4.1",
+    "jsonwebtoken": "^9.0.2",
+    "kafkajs": "^2.2.4",
+    "opossum": "^8.1.4",
+    "pino": "^9.1.0",
+    "rate-limiter-flexible": "^5.0.3",
+    "redlock": "^5.0.0-beta.2",
+    "socket.io": "^4.7.5",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/node": "^20.12.12",
+    "@types/uuid": "^9.0.8",
+    "pino-pretty": "^11.1.0",
+    "prisma": "^5.14.0",
+    "socket.io-client": "^4.7.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  }
+}

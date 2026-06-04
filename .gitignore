@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+jspm_packages/
+web_modules/
+
+# Production Build
+dist/
+build/
+
+# Environment configurations (sensitive keys)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.log
+
+# Diagnostic reports (CRA)
+.pnp
+.pnp.js
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor configurations
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# SQLite databases (if used for local testing)
+*.db
+*.db-journal
+
+# Prisma Client output (if customized, standard generated clients reside inside node_modules)
+/prisma/generated-client
