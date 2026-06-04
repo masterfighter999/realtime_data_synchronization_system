@@ -1,20 +1,22 @@
-FROM node:20-alpine AS builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY prisma ./prisma
-RUN npx prisma generate
-COPY . .
-RUN npm run build
-
 FROM node:20-alpine
 WORKDIR /app
+
+# Install dependencies (both production and development)
 COPY package*.json ./
-RUN npm ci --omit=dev
-COPY prisma ./prisma
+RUN npm ci
+
+# Copy application source
+COPY . .
+
+# Generate Prisma client and compile TypeScript
 RUN npx prisma generate
-COPY --from=builder /app/dist ./dist
-COPY start.sh ./
+RUN npm run build
+
+# Make startup script executable
 RUN chmod +x start.sh
+
+# Expose API and WebSocket ports
 EXPOSE 3000 3001
+
+# Run the startup script
 CMD ["sh", "start.sh"]
