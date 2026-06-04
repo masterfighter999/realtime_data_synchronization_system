@@ -24,7 +24,7 @@ graph TD
 
     Client <-->|REST API / Snapshot / Replay| API
     Client <-->|Socket.IO Connections| WS
-    API <-->|Prisma Client (Circuit Breaker)| DB
+    API <-->|Prisma Client with Circuit Breaker| DB
     API -.->|Invalidate / Cache-Aside| Valkey
     WS <-->|Valkey metrics| Valkey
     WS <-->|Kafka Consumer Group| Kafka
