@@ -161,9 +161,10 @@ sequenceDiagram
 
 ## Real-Time Visual Dashboard
 
-To showcase the system in action and facilitate live demonstrations (such as screenshots and video recordings), a premium **Real-Time Visual Dashboard** is built-in and served directly from the Express API server at:
+To showcase the system in action and facilitate live demonstrations (such as screenshots and video recordings), a premium **Real-Time Visual Dashboard** is built-in and served directly from the Express API server.
 
-👉 **[http://localhost:3000/](http://localhost:3000/)**
+* **Local Link**: 👉 **[http://localhost:3000/](http://localhost:3000/)**
+* **Live Link**: 👉 **[https://realtime-data-synchronization-system.onrender.com](https://realtime-data-synchronization-system.onrender.com)**
 
 ### Key Dashboard Features:
 1. **Interactive Session Authentication**: Login instantly as `admin_user` (Admin role) or `customer_a` (Customer role) using issued JWTs.
