@@ -3,20 +3,20 @@ import { redis } from '../infrastructure/redis';
 import { Request, Response, NextFunction } from 'express';
 import { logger } from './logger';
 
-// 1. IP-based limiter: 100 requests per 15 minutes
+// 1. IP-based limiter: 1000 requests per 15 minutes
 export const ipLimiter = new RateLimiterRedis({
   storeClient: redis,
   keyPrefix: 'rl:ip:',
-  points: 100,
+  points: 1000,
   duration: 15 * 60,
   blockDuration: 60 * 5, // block for 5 minutes if limit hit
 });
 
-// 2. Client-based limiter: 30 requests per minute
+// 2. Client-based limiter: 300 requests per minute
 export const clientLimiter = new RateLimiterRedis({
   storeClient: redis,
   keyPrefix: 'rl:client:',
-  points: 30,
+  points: 300,
   duration: 60,
 });
 
